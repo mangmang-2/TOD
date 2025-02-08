@@ -5,6 +5,7 @@
 #include "Components/VolumetricCloudComponent.h"
 #include "Materials/MaterialParameterCollectionInstance.h"
 #include "Components/DirectionalLightComponent.h"
+#include "WeatherSubsystem.h"
 
 // Sets default values
 AWeatherManagerActor::AWeatherManagerActor()
@@ -18,13 +19,14 @@ AWeatherManagerActor::AWeatherManagerActor()
 void AWeatherManagerActor::BeginPlay()
 {
 	Super::BeginPlay();
+
     if (MPC_Global)
     {
-        // UMaterialParameterCollectionInstance 가져오기 (MPC를 변경하려면 꼭 필요)
         MPC_Instance = GetWorld()->GetParameterCollectionInstance(MPC_Global);
     }
+
     FindDirectionalLight();
-    BeginCloudy();
+    //BeginCloudy();
 }
 
 // Called every frame
@@ -34,36 +36,52 @@ void AWeatherManagerActor::Tick(float DeltaTime)
 
 }
 
+
 void AWeatherManagerActor::BeginCloudy()
 {
-    if (MPC_Instance)
-    {
-        CloudyTimer.StartValue = -0.2f;
-        CloudyTimer.TargetValue = 0.4f;
-        CloudyTimer.Duration = 10.0f;
-        CloudyTimer.ElapsedTime = 0.0f;
-        GetWorldTimerManager().SetTimer(
-            CloudyTimer.TimerHandle,
-            [this]() { UpdateCloudCoverage(CloudyTimer); },
-            0.1f,
-            true
-        );
+    UWeatherSubsystem* WeatherSubsystem = GetGameInstance()->GetSubsystem<UWeatherSubsystem>();
+    if(WeatherSubsystem == nullptr)
+        return;
 
-        LightTimer.StartValue = 4.0f;
-        LightTimer.TargetValue = 1.0f;
-        LightTimer.Duration = 10.0f;
-        LightTimer.ElapsedTime = 0.0f;
+    FWeatherData CurrentWeatherData = WeatherSubsystem->GetCurrentWeatherData();
+    FWeatherData WeatherData = WeatherSubsystem->GetWeatherData(EWeatherType::Rain);
+    
+	CloudCoverageTimer.StartValue = CurrentWeatherData.CloudCoverage;
+	CloudCoverageTimer.TargetValue = WeatherData.CloudCoverage;
+	CloudCoverageTimer.Duration = 10.0f;
+	CloudCoverageTimer.ElapsedTime = 0.0f;
+	GetWorldTimerManager().SetTimer(
+		CloudCoverageTimer.TimerHandle,
+		[this]() { UpdateCloud(TEXT("CloudCoverage"), CloudCoverageTimer); },
+		0.1f,
+		true
+	);
 
-        GetWorldTimerManager().SetTimer(
-            LightTimer.TimerHandle,
-            [this]() { UpdateIntensity(LightTimer); },
-            0.1f,
-            true
-        );
-    }
+    //CloudScaleTimer.StartValue = CurrentWeatherData.CloudScale;
+    //CloudScaleTimer.TargetValue = WeatherData.CloudScale;
+    //CloudScaleTimer.Duration = 10.0f;
+    //CloudScaleTimer.ElapsedTime = 0.0f;
+    //GetWorldTimerManager().SetTimer(
+    //    CloudScaleTimer.TimerHandle,
+    //    [this]() { UpdateCloud(TEXT("CloudScale"), CloudScaleTimer); },
+    //    0.1f,
+    //    true
+    //);
+
+	LightTimer.StartValue = CurrentWeatherData.Intensity;
+	LightTimer.TargetValue = WeatherData.Intensity;
+	LightTimer.Duration = 10.0f;
+	LightTimer.ElapsedTime = 0.0f;
+
+	GetWorldTimerManager().SetTimer(
+		LightTimer.TimerHandle,
+		[this]() { UpdateIntensity(LightTimer); },
+		0.1f,
+		true
+	);
 }
 
-void AWeatherManagerActor::UpdateCloudCoverage(FTickData& TickData)
+void AWeatherManagerActor::UpdateCloud(FName MaterialName, FTickData& TickData)
 {
     if (MPC_Instance == nullptr)
     {
@@ -75,7 +93,7 @@ void AWeatherManagerActor::UpdateCloudCoverage(FTickData& TickData)
     float Alpha = TickData.ElapsedTime / TickData.Duration; // 0 ~ 1 사이 값
     float NewValue = FMath::Lerp(TickData.StartValue, TickData.TargetValue, Alpha); // 선형 보간
 
-    MPC_Instance->SetScalarParameterValue(TEXT("CloudCoverage"), NewValue);
+    MPC_Instance->SetScalarParameterValue(MaterialName, NewValue);
 
     if (TickData.ElapsedTime >= TickData.Duration)
     {

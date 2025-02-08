@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Data/WeatherData.h"
 #include "WeatherManagerActor.generated.h"
 
 USTRUCT()
@@ -41,13 +42,15 @@ protected:
 
 	class UMaterialParameterCollectionInstance* MPC_Instance;
 	
-	FTickData CloudyTimer;
+	FTickData CloudCoverageTimer;
+	FTickData CloudScaleTimer;
 	FTickData LightTimer;
 public:
+
 	void BeginCloudy();
 	
 	UFUNCTION()
-	void UpdateCloudCoverage(FTickData& TickData);
+	void UpdateCloud(FName MaterialName, FTickData& TickData);
 
 	void FindDirectionalLight();
 
@@ -57,4 +60,6 @@ public:
 protected:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class UDirectionalLightComponent> DirectionalLightComponent;
+
+
 };
