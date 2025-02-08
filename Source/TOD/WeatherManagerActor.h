@@ -14,7 +14,9 @@ struct FTickData
 
 	FTimerHandle TimerHandle;
 	float StartValue;
+	FVector4f StartVector;
 	float TargetValue;
+	FVector4f TargetVector;
 	float Duration;
 	float ElapsedTime;
 };
@@ -44,13 +46,18 @@ protected:
 	
 	FTickData CloudCoverageTimer;
 	FTickData CloudScaleTimer;
+	FTickData CloudAlbedoColorTimer;
+	FTickData CloudWindControsTimer;
 	FTickData LightTimer;
 public:
 
 	void BeginCloudy();
 	
 	UFUNCTION()
-	void UpdateCloud(FName MaterialName, FTickData& TickData);
+	void UpdateCloudScalar(FName MaterialName, FTickData& TickData);
+
+		UFUNCTION()
+	void UpdateCloudVector(FName MaterialName, FTickData& TickData);
 
 	void FindDirectionalLight();
 

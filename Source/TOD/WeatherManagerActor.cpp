@@ -26,7 +26,7 @@ void AWeatherManagerActor::BeginPlay()
     }
 
     FindDirectionalLight();
-    //BeginCloudy();
+    BeginCloudy();
 }
 
 // Called every frame
@@ -52,21 +52,44 @@ void AWeatherManagerActor::BeginCloudy()
 	CloudCoverageTimer.ElapsedTime = 0.0f;
 	GetWorldTimerManager().SetTimer(
 		CloudCoverageTimer.TimerHandle,
-		[this]() { UpdateCloud(TEXT("CloudCoverage"), CloudCoverageTimer); },
+		[this]() { UpdateCloudScalar(TEXT("CloudCoverage"), CloudCoverageTimer); },
 		0.1f,
 		true
 	);
 
-    //CloudScaleTimer.StartValue = CurrentWeatherData.CloudScale;
-    //CloudScaleTimer.TargetValue = WeatherData.CloudScale;
-    //CloudScaleTimer.Duration = 10.0f;
-    //CloudScaleTimer.ElapsedTime = 0.0f;
-    //GetWorldTimerManager().SetTimer(
-    //    CloudScaleTimer.TimerHandle,
-    //    [this]() { UpdateCloud(TEXT("CloudScale"), CloudScaleTimer); },
-    //    0.1f,
-    //    true
-    //);
+    CloudScaleTimer.StartValue = CurrentWeatherData.CloudScale;
+    CloudScaleTimer.TargetValue = WeatherData.CloudScale;
+    CloudScaleTimer.Duration = 10.0f;
+    CloudScaleTimer.ElapsedTime = 0.0f;
+    GetWorldTimerManager().SetTimer(
+        CloudScaleTimer.TimerHandle,
+        [this]() { UpdateCloudScalar(TEXT("CloudScale"), CloudScaleTimer); },
+        0.1f,
+        true
+    );
+
+    CloudAlbedoColorTimer.StartVector = CurrentWeatherData.CloudAlbedoColor;
+    CloudAlbedoColorTimer.TargetVector = WeatherData.CloudAlbedoColor;
+    CloudAlbedoColorTimer.Duration = 10.0f;
+    CloudAlbedoColorTimer.ElapsedTime = 0.0f;
+    GetWorldTimerManager().SetTimer(
+        CloudAlbedoColorTimer.TimerHandle,
+        [this]() { UpdateCloudScalar(TEXT("CloudAlbedoColor"), CloudAlbedoColorTimer); },
+        0.1f,
+        true
+    );
+
+    CloudWindControsTimer.StartVector = CurrentWeatherData.CloudWindControls;
+    CloudWindControsTimer.TargetVector = WeatherData.CloudWindControls;
+    CloudWindControsTimer.Duration = 10.0f;
+    CloudWindControsTimer.ElapsedTime = 0.0f;
+    GetWorldTimerManager().SetTimer(
+        CloudWindControsTimer.TimerHandle,
+        [this]() { UpdateCloudScalar(TEXT("CloudWindContros"), CloudWindControsTimer); },
+        0.1f,
+        true
+    );
+
 
 	LightTimer.StartValue = CurrentWeatherData.Intensity;
 	LightTimer.TargetValue = WeatherData.Intensity;
@@ -81,7 +104,7 @@ void AWeatherManagerActor::BeginCloudy()
 	);
 }
 
-void AWeatherManagerActor::UpdateCloud(FName MaterialName, FTickData& TickData)
+void AWeatherManagerActor::UpdateCloudScalar(FName MaterialName, FTickData& TickData)
 {
     if (MPC_Instance == nullptr)
     {
@@ -99,6 +122,10 @@ void AWeatherManagerActor::UpdateCloud(FName MaterialName, FTickData& TickData)
     {
         GetWorldTimerManager().ClearTimer(TickData.TimerHandle); // 타이머 종료
     }
+}
+
+void AWeatherManagerActor::UpdateCloudVector(FName MaterialName, FTickData& TickData)
+{
 }
 
 void AWeatherManagerActor::FindDirectionalLight()
