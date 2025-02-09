@@ -41,3 +41,8 @@ FWeatherData UWeatherSubsystem::GetCurrentWeatherData()
 {
     return GetWeatherData(CurrentWeatherType);
 }
+
+void UWeatherSubsystem::SetCurrentWeatherData(EWeatherType WeatherType)
+{
+    CurrentWeatherType = WeatherType;
+}

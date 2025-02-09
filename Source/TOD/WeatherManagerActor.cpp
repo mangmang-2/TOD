@@ -6,6 +6,11 @@
 #include "Materials/MaterialParameterCollectionInstance.h"
 #include "Components/DirectionalLightComponent.h"
 #include "WeatherSubsystem.h"
+#include "NativeGameplayTags.h"
+#include "MessageSystem/GameplayMessageSubsystem.h"
+#include "MessageSystem/MessageData/WeatherMessage.h"
+
+UE_DEFINE_GAMEPLAY_TAG(TAG_Weather_Message, "Message.Weather.Actor");
 
 // Sets default values
 AWeatherManagerActor::AWeatherManagerActor()
@@ -26,7 +31,9 @@ void AWeatherManagerActor::BeginPlay()
     }
 
     FindDirectionalLight();
-    BeginCloudy();
+
+    UGameplayMessageSubsystem& MessageSubsystem = UGameplayMessageSubsystem::Get(GetWorld());
+    MessageSubsystem.RegisterListener(TAG_Weather_Message, this, &ThisClass::ResponseMessage);
 }
 
 // Called every frame
@@ -37,14 +44,16 @@ void AWeatherManagerActor::Tick(float DeltaTime)
 }
 
 
-void AWeatherManagerActor::BeginCloudy()
+void AWeatherManagerActor::BeginWeatherChange(EWeatherType WeatherType)
 {
     UWeatherSubsystem* WeatherSubsystem = GetGameInstance()->GetSubsystem<UWeatherSubsystem>();
     if(WeatherSubsystem == nullptr)
         return;
 
     FWeatherData CurrentWeatherData = WeatherSubsystem->GetCurrentWeatherData();
-    FWeatherData WeatherData = WeatherSubsystem->GetWeatherData(EWeatherType::Rain);
+    WeatherSubsystem->SetCurrentWeatherData(WeatherType);
+
+    FWeatherData WeatherData = WeatherSubsystem->GetWeatherData(WeatherType);
     
 	CloudCoverageTimer.StartValue = CurrentWeatherData.CloudCoverage;
 	CloudCoverageTimer.TargetValue = WeatherData.CloudCoverage;
@@ -86,8 +95,8 @@ void AWeatherManagerActor::BeginCloudy()
     GetWorldTimerManager().SetTimer(
         CloudWindControsTimer.TimerHandle,
         [this]() { UpdateCloudScalar(TEXT("CloudWindContros"), CloudWindControsTimer); },
-        0.1f,
-        true
+        10.0f,
+        false
     );
 
 
@@ -155,4 +164,9 @@ void AWeatherManagerActor::UpdateIntensity(FTickData& TickData)
     {
         GetWorldTimerManager().ClearTimer(TickData.TimerHandle); // 타이머 종료
     }
+}
+
+void AWeatherManagerActor::ResponseMessage(FGameplayTag Channel, const FWeatherMessage& Payload)
+{
+    BeginWeatherChange(Payload.WeatherType);
 }

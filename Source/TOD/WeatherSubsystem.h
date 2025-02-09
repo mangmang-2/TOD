@@ -21,6 +21,7 @@ public:
 
 	FWeatherData GetWeatherData(EWeatherType WeatherType);
 	FWeatherData GetCurrentWeatherData();
+	void SetCurrentWeatherData(EWeatherType WeatherType);
 protected:
 	TArray<FWeatherData> WeatherDataList;
 	EWeatherType CurrentWeatherType;

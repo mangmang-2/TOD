@@ -51,7 +51,7 @@ protected:
 	FTickData LightTimer;
 public:
 
-	void BeginCloudy();
+	void BeginWeatherChange(EWeatherType WeatherType);
 	
 	UFUNCTION()
 	void UpdateCloudScalar(FName MaterialName, FTickData& TickData);
@@ -69,4 +69,5 @@ protected:
 	TObjectPtr<class UDirectionalLightComponent> DirectionalLightComponent;
 
 
+	void ResponseMessage(struct FGameplayTag Channel, const struct FWeatherMessage& Payload);
 };
