@@ -22,6 +22,14 @@ public:
 	void OnSliderValueChanged(float Value);
 
 	void SetSolarTime(int32 TargetFrame);
+
+	UFUNCTION(BlueprintCallable)
+	void PlaySolar(float Rate);
+	UFUNCTION(BlueprintCallable)
+	void StopSolar();
+
+	void UpdateSolarTime();
+	void SetTimeText(int32 TotalMinutes);
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UTextBlock> TextBlock_Time;
