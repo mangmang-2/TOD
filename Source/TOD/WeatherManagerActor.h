@@ -64,6 +64,9 @@ public:
 	UFUNCTION()
 	void UpdateIntensity(FTickData& TickData);
 
+	UFUNCTION()
+	void UpdateRain(bool bRain);
+
 protected:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class UDirectionalLightComponent> DirectionalLightComponent;

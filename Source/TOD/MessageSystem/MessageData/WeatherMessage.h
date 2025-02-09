@@ -22,3 +22,17 @@ struct FWeatherMessage
     UPROPERTY(BlueprintReadWrite)
     EWeatherType WeatherType;
 };
+
+
+
+USTRUCT(BlueprintType)
+struct FPlayerMessage
+{
+    GENERATED_BODY()
+
+    UPROPERTY(BlueprintReadWrite)
+    FGameplayTag Verb;
+
+    UPROPERTY(BlueprintReadWrite)
+    bool bRain;
+};

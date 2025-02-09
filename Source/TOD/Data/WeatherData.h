@@ -22,14 +22,19 @@ struct FWeatherData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere)
 	EWeatherType WeatherType;
+
 	UPROPERTY(EditAnywhere)
 	float CloudCoverage;
+
 	UPROPERTY(EditAnywhere)
 	float CloudScale;
+
 	UPROPERTY(EditAnywhere)
 	float Intensity;
+
 	UPROPERTY(EditAnywhere)
 	FVector4f CloudAlbedoColor;
+
 	UPROPERTY(EditAnywhere)
 	FVector4f CloudWindControls;
 };

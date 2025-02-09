@@ -11,6 +11,8 @@
 #include "MessageSystem/MessageData/WeatherMessage.h"
 
 UE_DEFINE_GAMEPLAY_TAG(TAG_Weather_Message, "Message.Weather.Actor");
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Player_Message);
+
 
 // Sets default values
 AWeatherManagerActor::AWeatherManagerActor()
@@ -34,6 +36,8 @@ void AWeatherManagerActor::BeginPlay()
 
     UGameplayMessageSubsystem& MessageSubsystem = UGameplayMessageSubsystem::Get(GetWorld());
     MessageSubsystem.RegisterListener(TAG_Weather_Message, this, &ThisClass::ResponseMessage);
+
+    BeginWeatherChange(EWeatherType::Clear);
 }
 
 // Called every frame
@@ -55,6 +59,7 @@ void AWeatherManagerActor::BeginWeatherChange(EWeatherType WeatherType)
 
     FWeatherData WeatherData = WeatherSubsystem->GetWeatherData(WeatherType);
     
+    GetWorldTimerManager().ClearTimer(CloudCoverageTimer.TimerHandle);
 	CloudCoverageTimer.StartValue = CurrentWeatherData.CloudCoverage;
 	CloudCoverageTimer.TargetValue = WeatherData.CloudCoverage;
 	CloudCoverageTimer.Duration = 10.0f;
@@ -66,6 +71,7 @@ void AWeatherManagerActor::BeginWeatherChange(EWeatherType WeatherType)
 		true
 	);
 
+    GetWorldTimerManager().ClearTimer(CloudScaleTimer.TimerHandle);
     CloudScaleTimer.StartValue = CurrentWeatherData.CloudScale;
     CloudScaleTimer.TargetValue = WeatherData.CloudScale;
     CloudScaleTimer.Duration = 10.0f;
@@ -77,6 +83,7 @@ void AWeatherManagerActor::BeginWeatherChange(EWeatherType WeatherType)
         true
     );
 
+    GetWorldTimerManager().ClearTimer(CloudAlbedoColorTimer.TimerHandle);
     CloudAlbedoColorTimer.StartVector = CurrentWeatherData.CloudAlbedoColor;
     CloudAlbedoColorTimer.TargetVector = WeatherData.CloudAlbedoColor;
     CloudAlbedoColorTimer.Duration = 10.0f;
@@ -88,6 +95,7 @@ void AWeatherManagerActor::BeginWeatherChange(EWeatherType WeatherType)
         true
     );
 
+    GetWorldTimerManager().ClearTimer(CloudWindControsTimer.TimerHandle);
     CloudWindControsTimer.StartVector = CurrentWeatherData.CloudWindControls;
     CloudWindControsTimer.TargetVector = WeatherData.CloudWindControls;
     CloudWindControsTimer.Duration = 10.0f;
@@ -100,6 +108,7 @@ void AWeatherManagerActor::BeginWeatherChange(EWeatherType WeatherType)
     );
 
 
+    GetWorldTimerManager().ClearTimer(LightTimer.TimerHandle);
 	LightTimer.StartValue = CurrentWeatherData.Intensity;
 	LightTimer.TargetValue = WeatherData.Intensity;
 	LightTimer.Duration = 10.0f;
@@ -111,6 +120,8 @@ void AWeatherManagerActor::BeginWeatherChange(EWeatherType WeatherType)
 		0.1f,
 		true
 	);
+
+    UpdateRain(EWeatherType::Rain == WeatherType);;
 }
 
 void AWeatherManagerActor::UpdateCloudScalar(FName MaterialName, FTickData& TickData)
@@ -164,6 +175,36 @@ void AWeatherManagerActor::UpdateIntensity(FTickData& TickData)
     {
         GetWorldTimerManager().ClearTimer(TickData.TimerHandle); // 타이머 종료
     }
+}
+
+void AWeatherManagerActor::UpdateRain(bool bRain)
+{
+    if (bRain == false)
+    {
+        FPlayerMessage Message;
+        Message.Verb = TAG_Player_Message;
+        Message.bRain = bRain;
+
+        UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(GetWorld());
+        MessageSystem.BroadcastMessage(Message.Verb, Message);
+        return;
+    }
+
+    FTimerHandle PlayerMessageTimerHandle;
+    GetWorldTimerManager().SetTimer(
+        PlayerMessageTimerHandle,
+        [this, bRain]()
+        {
+            FPlayerMessage Message;
+            Message.Verb = TAG_Player_Message;
+            Message.bRain = bRain;
+
+            UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(GetWorld());
+            MessageSystem.BroadcastMessage(Message.Verb, Message);
+        },
+        10.0f,
+        false
+    );
 }
 
 void AWeatherManagerActor::ResponseMessage(FGameplayTag Channel, const FWeatherMessage& Payload)
